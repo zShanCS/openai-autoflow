@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from server_models import Prompt, Prompt_Language, IntentAnalysis
+from server_models import Code_Task, Prompt, Prompt_Language, IntentAnalysis
 from templates import (code2nl, fix_bugs, get_api_request_code,
                        get_error_explanation, nl2sql, sql2nl, code2docstring, get_oneliner, code2ut,complete_code)
 
@@ -12,8 +12,8 @@ from templates import (code2nl, fix_bugs, get_api_request_code,
     sql2nl, ☑️
     code2docstring, ☑️
     get_oneliner, ☑️
-    code2ut,
-    complete_code
+    code2ut, ☑️
+    complete_code 
 '''
 app = FastAPI()
 
@@ -48,40 +48,52 @@ async def Code2DocString(data:Prompt):
     return {'status':'ok', 'output':code2docstring(data.prompt)}
 
 @app.post('/code2ut')
-async def Code2DocString(data:Prompt_Language):
+async def Code2DUnitTest(data:Prompt_Language):
     print(data)
     return {'status':'ok', 'output':code2ut(data.prompt, data.language)}
+
+@app.post('/complete_code')
+async def CodeCompletion(data:Code_Task):
+    print(data)
+    return {'status':'ok', 'output':complete_code(data.code, data.task)}
 
 
 @app.post('/intent')
 async def get_intent(query:IntentAnalysis):
-    query = query.query
+    queryStr = query.query
+    print(queryStr)
     intent_list = set()
-    if query.lower().find('code') != -1:
+    if queryStr.lower().find('code') != -1:
         intent_list.add('code2nl')
 
-    if query.lower().find('sql') != -1:
+    if queryStr.lower().find('sql') != -1:
         intent_list.add('sql2nl')
         intent_list.add('nl2sql')
 
-    if query.lower().find('bugs') != -1:
+    if queryStr.lower().find('bugs') != -1:
         intent_list.add('fix_bugs')
         intent_list.add('get_error_explanation')
 
-    if query.lower().find('error') != -1:
+    if queryStr.lower().find('error') != -1:
         intent_list.add('get_error_explanation')
     
-    if query.lower().find('one') != -1:
+    if queryStr.lower().find('one') != -1:
         intent_list.add('get_oneliner')
-    if query.lower().find('shorten') != -1:
+    if queryStr.lower().find('shorten') != -1:
         intent_list.add('get_oneliner')
     
     
-    if query.lower().find('docstring') != -1:
+    if queryStr.lower().find('docstring') != -1:
         intent_list.add('code2docstring')
-    if query.lower().find('documentation') != -1:
+    if queryStr.lower().find('documentation') != -1:
         intent_list.add('code2docstring')
 
+
+    if queryStr.lower().find('test') != -1:
+        intent_list.add('code2ut')
+
+    if queryStr.lower().find('complete') != -1:
+        intent_list.add('complete_code')
 
     if len(intent_list) == 0:
         return {'status':'ok', 'output':['magic']}

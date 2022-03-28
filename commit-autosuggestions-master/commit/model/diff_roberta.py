@@ -17,13 +17,12 @@
 
 import torch
 import torch.nn as nn
-
-from transformers.modeling_roberta import (
+from transformers.modeling_outputs import BaseModelOutputWithPooling
+from transformers.models.roberta.modeling_roberta import (
     create_position_ids_from_input_ids,
     RobertaPreTrainedModel,
     RobertaEncoder,
-    RobertaPooler,
-    BaseModelOutputWithPooling
+    RobertaPooler
 )
 
 class RobertaEmbeddings(nn.Module):

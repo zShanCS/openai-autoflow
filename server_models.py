@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 class Prompt(BaseModel):
@@ -10,5 +11,15 @@ class Code_Task(BaseModel):
     code:str
     task:str
 
+class API_Req(BaseModel):
+    api_name:str
+    task:str
+    params:str
+    token: Optional[str]
 class IntentAnalysis(BaseModel):
     query:str
+
+class QueryInfo(BaseModel):
+    task:str
+    tableName:str
+    columnName:str

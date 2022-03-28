@@ -4,7 +4,7 @@ import inspect
 import json
 import re
 
-from code_gen import get_code
+from code_gen import get_code, iteratively_request_code
 
 
 def get_comment(language, ml=True):
@@ -14,6 +14,11 @@ def get_comment(language, ml=True):
             return ('"""', '"""')
         else:
             return '#'
+    elif language.lower() == 'matlab':
+        if ml:
+            return ('%{', '%}')
+        else:
+            return '%'
     else:
         if ml:
             return ('/*', '*/')
@@ -60,9 +65,9 @@ def get_api_template(api_name, task, params, token=None):
 
 def get_api_request_code(api_name, task, params, token=None):
     prompt = get_api_template(api_name, task, params, token)
-    code = get_code(prompt, max_tokens=128, temperature=0.2,
-                    presence_penalty=0.5, frequency_penalty=0.5,
-                    stop=['"""', '\n\n\n'], best_of=3)
+    code = iteratively_request_code(prompt, max_tokens=64, temperature=0.2,
+                                    presence_penalty=0.5, frequency_penalty=0.5,
+                                    stop=['"""', '\n\n\n'], best_of=3)
     return code
 
 
@@ -105,9 +110,10 @@ def get_sql_explanation_template(query):
 
 
 def sql2nl(query):
-    query = get_sql_explanation_template(query)
-    explanation = get_code(query, max_tokens=256, temperature=0.4,
-                           stop=["#", "\n\n", "SELECT", '"""'])
+    prompt = get_sql_explanation_template(query)
+    explanation = iteratively_request_code(prompt, max_tokens=256,
+                                           temperature=0.4,
+                                           stop=["#", "\n\n", "SELECT", '"""'])
     explanation = "--" + explanation
     # remove lines without --
     explanation_split = explanation.split('\n')
@@ -165,10 +171,10 @@ def get_sql_generation_template(table_names, col_names, task, sql_engine="MySQL"
 
 
 def nl2sql(table_names, col_names, task, sql_engine="MySQL"):
-    template = get_sql_generation_template(
+    prompt = get_sql_generation_template(
         table_names, col_names, task, sql_engine)
-    sql = get_code(template, max_tokens=256, temperature=0.2,
-                   stop=['#', '\n\n', ';', '"""'], best_of=3)
+    sql = iteratively_request_code(prompt, max_tokens=256, temperature=0.2,
+                                   stop=['#', '\n\n', ';', '"""'], best_of=3)
     sql = "SELECT" + sql
     return sql
 
@@ -235,7 +241,9 @@ def get_code2nl_template(code, language):
 
 def code2nl(code, language):
     prompt = get_code2nl_template(code, language)
-    return get_code(prompt, temperature=0.3, max_tokens=2048, frequency_penalty=0.2, stop=['"""', '*/'])
+    code = iteratively_request_code(
+        prompt, temperature=0.3, max_tokens=256, frequency_penalty=0.2, stop=['"""', '*/'])
+    return code
 
 
 """Bug Fixing
@@ -265,7 +273,7 @@ def get_error_explanation_template(function):
 
 def get_error_explanation(function):
     prompt = get_error_explanation_template(function)
-    code = get_code(prompt, temperature=0.2, stop=['#', '"""', '//', '/*'],
+    code = iteratively_request_code(prompt, temperature=0.2, stop=['#', '"""', '//', '/*'],
                     max_tokens=256, frequency_penalty=1, best_of=5)
     return code
 
@@ -284,7 +292,7 @@ It is recommended that the function has a docstring
 """
 
 
-def get_fix_bugs_template(function, language):
+def get_fix_bugs_template(function, language, get_fn_header=False):
     function = function.strip()
     parts = function.split('\n')
     header = parts[0]
@@ -305,7 +313,10 @@ def get_fix_bugs_template(function, language):
     template += header
     if docstring:
         template += f"\n{docstring}"
-    return template
+    if get_fn_header:
+        return template, header
+    else:
+        return template
 
 
 def fix_bugs(function, language):
@@ -314,21 +325,24 @@ def fix_bugs(function, language):
         stop = ['"""', '\n\n', '###']
         if '#' not in function:
             stop.append('#')
-        template = "# Python 3\n"
+        prompt = "# Python 3\n"
     else:
         stop = ['#', '"""', '/*']
         if '//' not in function:
             stop.append('//')
-        template = f'# {language}\n'
-    template = get_fix_bugs_template(function, language)
+        prompt = f'# {language}\n'
+    template = get_fix_bugs_template(function, language, True)
+    prompt += template[0]
+    fn_header = template[1]
     temperature = 0
-    code = get_code(template, max_tokens=512, frequency_penalty=0.4,
+    code = iteratively_request_code(prompt, max_tokens=512, frequency_penalty=0.4,
                     temperature=temperature, stop=stop, best_of=3)
     while code.strip() == '':
         temperature += 0.1
-        code = get_code(template, max_tokens=512, frequency_penalty=0.4,
+        code = iteratively_request_code(prompt, max_tokens=512, frequency_penalty=0.4,
                         temperature=temperature, stop=stop, best_of=3)
-    return code
+    fixed_code = fn_header + "\n" + code
+    return fixed_code
 
 
 """## Write Comments/Docstring for Code
@@ -371,8 +385,8 @@ def get_code2docstring_template(code):
 
 def code2docstring(code):
     prompt = get_code2docstring_template(code)
-    code = get_code(prompt, temperature=0.2, max_tokens=150,
-                    frequency_penalty=0.5, stop=['"""'])
+    code = iteratively_request_code(prompt, temperature=0.2, max_tokens=256,
+                    frequency_penalty=0.5, stop=['"""', '/*'])
     return code
 
 
@@ -439,7 +453,7 @@ def get_oneliner_template(function_code, language):
 
 def get_oneliner(function_code, language):
     prompt = get_oneliner_template(function_code, language)
-    code = get_code(prompt, temperature=0.2, max_tokens=150,
+    code = iteratively_request_code(prompt, temperature=0.2, max_tokens=150,
                     frequency_penalty=0.5, stop=['"""', '\n'])
     return code
 
@@ -479,16 +493,16 @@ def get_unit_tests_template(function, language):
 
 def code2ut(function, language):
     if 'python' in language.lower():
-        template = "Python 3\n"
+        prompt = "Python 3\n"
     else:
-        template = f"{language}\n"
-    template += get_unit_tests_template(function, language)
+        prompt = f"{language}\n"
+    prompt += get_unit_tests_template(function, language)
     temperature = 0
-    code = get_code(template, max_tokens=256, frequency_penalty=0.1, presence_penalty=0.1,
+    code = iteratively_request_code(prompt, max_tokens=256, frequency_penalty=0.1, presence_penalty=0.1,
                     temperature=temperature, stop=['#', '//', '/*'], best_of=3)
     while code.strip() == '':
         temperature += .1
-        code = get_code(template, max_tokens=256, frequency_penalty=0.1,
+        code = iteratively_request_code(prompt, max_tokens=256, frequency_penalty=0.1,
                         presence_penalty=0.1, temperature=temperature,
                         stop=['#', '"""', '//', '/*'], best_of=3)
     return code
@@ -540,7 +554,7 @@ def complete_code(code, task=''):
         temperature = 0.8
     else:
         temperature = 0.2
-    code = get_code(prompt, temperature=temperature, max_tokens=256, frequency_penalty=0.8,
+    code = iteratively_request_code(prompt, temperature=temperature, max_tokens=256, frequency_penalty=0.8,
                     presence_penalty=0.4, stop=['\n\n\n', '"""'])
     return code
 
@@ -551,7 +565,7 @@ def send_code_request(task, **kwargs):
         'sql2nl': sql2nl,
         'nl2sql': nl2sql,
         'code2nl': code2nl,
-        'error_explain': get_error_explanation, 
+        'error_explain': get_error_explanation,
         'fixbugs': fix_bugs,
         'code2doc': code2docstring,
         'oneliner': get_oneliner,

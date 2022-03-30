@@ -1,137 +1,106 @@
+from fastapi import FastAPI
+from server_models import API_Req, Code_Task, Prompt, Prompt_Language, IntentAnalysis, QueryInfo
+from code_gen import iteratively_request_code
+from classify_intent import get_task_from_query
 from templates import (code2nl, fix_bugs, get_api_request_code,
-                       get_error_explanation, nl2sql, sql2nl, code2docstring, get_oneliner, code2ut,complete_code)
-
-# result = get_api_request_code(api_name="Google Translate", task="Translate from German to English",
-#                               params="Ich bin dein vater")
-# print(result)
-
-# sql2nl
-# query = """SELECT DISTINCT department.name
-# FROM department
-# JOIN employee ON department.id = employee.department_id
-# JOIN salary_payments ON employee.id = salary_payments.employee_id
-# WHERE salary_payments.date BETWEEN '2020-06-01' AND '2020-06-30'
-# GROUP BY department.name
-# HAVING COUNT(employee.id) > 10;"""
-# explanation = sql2nl(query)
-# print(explanation)
-
-# nl2sql
-# """
-# # Table albums, columns = [AlbumId, Title, ArtistId]
-# # Table artists, columns = [ArtistId, Name]
-# # Table media_types, columns = [MediaTypeId, Name]
-# # Table playlists, columns = [PlaylistId, Name]
-# # Table playlist_track, columns = [PlaylistId, TrackId]
-# # Table tracks, columns = [TrackId, Name, AlbumId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice]
-
-# # Create a query for all albums by Adele
-# """
-# table_names = ["albums", "artists", "media_types",
-#                "playlists", "playlist_track", "tracks"]
-# col_names = [["AlbumId", "Title", "ArtistId"], ["ArtistId", "Name"], ["MediaTypeId", "Name"], ["PlaylistId", "Name"],
-#              ["PlaylistId", "TrackId"], ["TrackId", "Name", "AlbumId", "MediaTypeId", "GenreId", "Composer", "Milliseconds", "Bytes", "UnitPrice"]]
-# task = "all albums by Adele"
-# sql = nl2sql(table_names, col_names, task)
-# print(sql)
-
-# code2nl
-# C
-# prompt = '''int reverse(int n)
-# {
-#     int rev = 0;
-#     while (n != 0)
-#     {
-#         rev = rev * 10 + n % 10;
-#         n /= 10;
-#     }
-#     return rev;
-# }'''
-
-# code = code2nl(prompt, language='C')
-# print(code)
-
-
-
-# fix_bugs
-# function = '''
-# def check(n):
-#     """
-#     Check if a given number is less than twice the value of its reverse.
-#     """
-#     return n - 1 == int(str(n)[::-1])
-# '''
-
-# # only returns function body
-# code = fix_bugs(function, 'python')
-# print(code)
-
-#get_error_explanation
-# code="""
-# def is_prime(num):
-#     if num % i == 0:
-#         return False
-#     return True"""
-# ee=get_error_explanation(code)
-# print(ee)
-
-# code2docstring
-# code="""def reverseQueue(q):
-#     Stack = []
-#     while (not(q.empty())):
-#         Stack.append(q.queue[0])
-#         q.get()
-#     while (len(Stack) != 0):
-#         q.put(Stack[-1])
-#         Stack.pop()
-# """
-# doc=code2docstring(code)
-# print(doc)
-
-# get_oneliner
-# code="""
-# def is_prime(num):
-#     for i in range(2, num):
-#         if num % i == 0:
-#             return False
-#     return True"""
-# ol=get_oneliner(code,'python')
-# print(ol)
-
-# code2ut
-# code="""
-# def is_prime(num):
-#     for i in range(2, num):
-#         if num % i == 0:
-#             return False
-#     return True"""
-# ut=code2ut(code,'python')
-# print(ut)
-
-# complete_code
-# code="""
-# def is_prime(num):
-#     for i in range(2, num):"""        
-# cc=complete_code(code,'check is numbers is prime')
-# print(cc)
-
-from nl2codes import create_embeddings, search_for_code, search_tokenizer
+                       get_error_explanation, nl2sql, sql2nl, code2docstring, get_oneliner, code2ut, complete_code)
+import uvicorn
 '''
-Create an input json file first with following format:
-[
-  {
-    "fp": filepath,
-    "content": file content,
-  },
-]
+    code2nl, ☑️
+    fix_bugs, ☑️
+    get_api_request_code, ☑️
+    get_error_explanation, ☑️
+    nl2sql, ☑️
+    sql2nl, ☑️
+    code2docstring, ☑️
+    get_oneliner, ☑️
+    code2ut, ☑️
+    complete_code ☑️
 '''
-input_json = json.load("json_file.json")
-# when vs code just sends the input_json file just use
-create_embeddings(input_json, search_tokenizer.model_max_length)
-# this recreates the embeddings
+app = FastAPI()
 
-# for user queries
 
-# if calling it for the first time without calling create_embeddings beforehand
-# search_for_code("user query", input_json=input_json)
-# on subsequent user queries, use search_for_code("user query")
+@app.post('/code2nl')
+async def codeToNl(data: Prompt_Language):
+    print(data)
+    return {'status': 'ok', 'output': code2nl(data.prompt, data.language)}
+
+
+@app.post('/fix_bugs')
+async def FixBugs(data: Prompt_Language):
+    print(data)
+    return {'status': 'ok', 'output': fix_bugs(data.prompt, data.language)}
+
+
+@app.post('/explain_error')
+async def GetErrorExplanation(data: Prompt):
+    print(data)
+    return {'status': 'ok', 'output': get_error_explanation(data.prompt)}
+
+
+@app.post('/sql2nl')
+async def SQL_to_NL(data: Prompt):
+    print(data)
+    return {'status': 'ok', 'output': sql2nl(data.prompt)}
+
+
+@app.post('/oneliner')
+async def One_Liner(data: Prompt_Language):
+    print(data)
+    return {'status': 'ok', 'output': get_oneliner(data.prompt, data.language)}
+
+
+@app.post('/code2docstring')
+async def Code2DocString(data: Prompt):
+    print(data)
+    return {'status': 'ok', 'output': code2docstring(data.prompt)}
+
+
+@app.post('/code2ut')
+async def Code2DUnitTest(data: Prompt_Language):
+    print(data)
+    return {'status': 'ok', 'output': code2ut(data.prompt, data.language)}
+
+
+@app.post('/complete_code')
+async def CodeCompletion(data: Code_Task):
+    print(data)
+    return {'status': 'ok', 'output': complete_code(data.code, data.task)}
+
+
+@app.post('/nl2sql')
+async def NLtoSQL(data: QueryInfo):
+    columnList = []
+    print(data)
+    tableNames = data.tableName.split(",")
+    columnNames = data.columnName.split("]")
+    for cols in columnNames:
+        columnList.append(cols.split(","))
+    return {'status': 'ok', 'output': nl2sql(tableNames, columnNames, data.task)}
+
+
+@app.post('/api_req')
+async def Api_Request(data: API_Req):
+    print(data)
+    return {'status': 'ok', 'output': get_api_request_code(data.api_name, data.task, data.params, data.token)}
+
+
+@app.post('/magic')
+async def Api_Request(data: Prompt):
+    print(data)
+    return {'status': 'ok', 'output': iteratively_request_code(prompt=data.prompt, temperature=0.8, frequency_penalty=1, presence_penalty=0.5,
+                                                               max_tokens=512, stop=['\n\n\n'], best_of=5)}
+
+
+@app.post('/intent')
+async def get_intent(query: IntentAnalysis):
+    queryStr = query.query
+    print(queryStr)
+    intent_list = get_task_from_query(queryStr)
+    if len(intent_list) == 0:
+        return {'status': 'ok', 'output': ['magic']}
+    return {'status': 'ok', 'output': intent_list}
+
+  
+  if __name__ == "__main__":
+    uvicorn.run("server:app", host="0.0.0.0", port=80, log_level="info")

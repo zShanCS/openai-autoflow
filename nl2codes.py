@@ -8,11 +8,14 @@ import torch
 from sentence_transformers.util import semantic_search
 from transformers import RobertaModel, RobertaTokenizer
 
-weights = './codebert'
 device = torch.device(
     'cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+model_path = 'models/search'
+
 search_tokenizer = RobertaTokenizer.from_pretrained("microsoft/codebert-base")
-search_model = RobertaModel.from_pretrained(weights).to(device)
+search_model = RobertaModel.from_pretrained(model_path).to(device)
+
 
 def create_embeddings(input_json, seq_length):
     '''Create code embeddings for user code base'''
@@ -56,6 +59,7 @@ def create_embeddings(input_json, seq_length):
     del all_code_segments_2d
     torch.cuda.empty_cache()
 
+
 def get_most_similar(query, top_k):
     '''
     Get the embeddings in the code embedddings
@@ -72,6 +76,7 @@ def get_most_similar(query, top_k):
     hits = hits[0]
     return hits
 
+
 def filter_hits(hits, threshold):
     '''Keep only those hits that are >= threshold'''
     new_hits = []
@@ -79,6 +84,7 @@ def filter_hits(hits, threshold):
         if hit['score'] >= threshold:
             new_hits.append(hit)
     return new_hits
+
 
 def remove_special_tokens(string):
     return re.sub(r'<\S+>', '', string)
@@ -114,7 +120,8 @@ def search_for_code(query, top_k=1, threshold=0.4, input_json=None):
     global search_tokenizer
     if not os.path.exists("./code_embeddings.pt"):
         if input_json != None:
-            create_embeddings(input_json, seq_length=search_tokenizer.model_max_length)
+            create_embeddings(
+                input_json, seq_length=search_tokenizer.model_max_length)
         else:
             print("ERROR: EMBEDDINGS DO NOT EXIST")
             return ''
@@ -122,3 +129,15 @@ def search_for_code(query, top_k=1, threshold=0.4, input_json=None):
     hits_above_thresh = filter_hits(hits, threshold)
     code_segment = get_code_from_hits(hits_above_thresh)
     return code_segment
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('query',
+                        help='query string to search for code')
+    parser.add_argument('--input_json',
+                        help='path to json containing codebase files and their content')
+
+    args = parser.parse_args()
+    result = search_for_code(args.query, input_json=args.input_json)
+    print(result)

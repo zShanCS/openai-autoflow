@@ -111,14 +111,15 @@ def get_code_from_hits(hits):
     return code_segment
 
 
-def search_for_code(query, top_k=1, threshold=0.4, input_json=None):
+def search_for_code(query, top_k=1, threshold=0.4, recreate=False, input_json=None):
     '''
     Pass a query string
     Return a JSON array with intended code and its filepath
     '''
     # Create embeddings if they don't exist
     global search_tokenizer
-    if not os.path.exists("./code_embeddings.pt"):
+    # recreate if recreate=True
+    if not os.path.exists("./code_embeddings.pt") or recreate:
         if input_json != None:
             create_embeddings(
                 input_json, seq_length=search_tokenizer.model_max_length)

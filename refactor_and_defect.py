@@ -27,7 +27,7 @@ def refine(code):
   return out
 
 def detect_defect(code):
-  input_ids = tokenizer(string, return_tensors="pt").input_ids.to(device)
+  input_ids = tokenizer(code, return_tensors="pt").input_ids.to(device)
   generated_ids = defect_det.generate(input_ids, max_length=input_ids.shape[1])
   has_defect = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
   return has_defect

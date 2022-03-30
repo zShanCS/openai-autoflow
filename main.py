@@ -1,9 +1,11 @@
 from fastapi import FastAPI
-from server_models import API_Req, Code_Task, Prompt, Prompt_Language, IntentAnalysis, QueryInfo
+from server_models import API_Req, Code_Task, SearchCode, Prompt, Prompt_Language, IntentAnalysis, QueryInfo
 from code_gen import iteratively_request_code
 from classify_intent import get_task_from_query
 from templates import (code2nl, fix_bugs, get_api_request_code,
                        get_error_explanation, nl2sql, sql2nl, code2docstring, get_oneliner, code2ut, complete_code)
+from nl2codes import search_for_code
+from refactor_and_defect import refine, detect_defect
 import uvicorn
 '''
     code2nl, ☑️
@@ -85,6 +87,23 @@ async def Api_Request(data: API_Req):
     return {'status': 'ok', 'output': get_api_request_code(data.api_name, data.task, data.params, data.token)}
 
 
+@app.post('/refine')
+async def Api_Request(data: Prompt):
+    print(data)
+    return {'status': 'ok', 'output': refine(data.prompt)}
+
+@app.post('/detect-defect')
+async def Api_Request(data: Prompt):
+    print(data)
+    return {'status': 'ok', 'output': detect_defect(data.prompt)}
+
+
+@app.post('search-code')
+async def search_code(data:SearchCode):
+    print(data.code)
+    return {'status': 'ok', 'output': search_for_code(data.prompt, input_json=data.code)}
+  
+
 @app.post('/magic')
 async def Api_Request(data: Prompt):
     print(data)
@@ -101,6 +120,6 @@ async def get_intent(query: IntentAnalysis):
         return {'status': 'ok', 'output': ['magic']}
     return {'status': 'ok', 'output': intent_list}
 
-  
-  if __name__ == "__main__":
+
+if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=80, log_level="info")

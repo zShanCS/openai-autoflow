@@ -2,9 +2,8 @@ openai==0.15.0
 python-dotenv==0.19.2
 fastapi
 uvicorn[standard]
-sentence-transformers
 torch
-sentencepiece==0.1.91
-transformers==3.4.0
-whatthepatch==1.0.2
-easydict==1.9
+transformers
+whatthepatch
+easydict
+sentence-transformers

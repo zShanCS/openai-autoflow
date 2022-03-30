@@ -8,7 +8,7 @@ import torch
 from sentence_transformers.util import semantic_search
 from transformers import RobertaModel, RobertaTokenizer
 
-weights = '/content/drive/MyDrive/devrev'
+weights = './codebert'
 device = torch.device(
     'cuda') if torch.cuda.is_available() else torch.device('cpu')
 search_tokenizer = RobertaTokenizer.from_pretrained("microsoft/codebert-base")
@@ -87,7 +87,6 @@ def remove_special_tokens(string):
 def get_code_from_hits(hits):
     '''Get the corresponding code from the most similar hit(s)'''
     global search_tokenizer
-    code_and_filepaths = list()
     # just get the first one
     hit = hits[0]
     # the index inside the corpus

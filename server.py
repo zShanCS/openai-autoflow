@@ -4,7 +4,7 @@ from code_gen import iteratively_request_code
 from classify_intent import get_task_from_query
 from templates import (code2nl, fix_bugs, get_api_request_code,
                        get_error_explanation, nl2sql, sql2nl, code2docstring, get_oneliner, code2ut, complete_code)
-
+import uvicorn
 '''
     code2nl, ☑️
     fix_bugs, ☑️
@@ -103,4 +103,4 @@ async def get_intent(query: IntentAnalysis):
 
   
   if __name__ == "__main__":
-    uvicorn.run("example:app", host="0.0.0.0", port=80, log_level="info")
+    uvicorn.run("server:app", host="0.0.0.0", port=80, log_level="info")

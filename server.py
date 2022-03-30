@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from server_models import API_Req, Code_Task, Prompt, Prompt_Language, IntentAnalysis, QueryInfo
 from code_gen import iteratively_request_code
+from classify_intent import get_task_from_query
 from templates import (code2nl, fix_bugs, get_api_request_code,
                        get_error_explanation, nl2sql, sql2nl, code2docstring, get_oneliner, code2ut, complete_code)
 
@@ -95,42 +96,7 @@ async def Api_Request(data: Prompt):
 async def get_intent(query: IntentAnalysis):
     queryStr = query.query
     print(queryStr)
-    intent_list = set()
-    if queryStr.lower().find('code') != -1:
-        intent_list.add('code2nl')
-
-    if queryStr.lower().find('sql') != -1:
-        intent_list.add('sql2nl')
-        intent_list.add('nl2sql')
-
-    if queryStr.lower().find('bugs') != -1:
-        intent_list.add('fix_bugs')
-        intent_list.add('get_error_explanation')
-
-    if queryStr.lower().find('error') != -1:
-        intent_list.add('get_error_explanation')
-
-    if queryStr.lower().find('one') != -1:
-        intent_list.add('get_oneliner')
-    if queryStr.lower().find('shorten') != -1:
-        intent_list.add('get_oneliner')
-
-    if queryStr.lower().find('docstring') != -1:
-        intent_list.add('code2docstring')
-    if queryStr.lower().find('documentation') != -1:
-        intent_list.add('code2docstring')
-
-    if queryStr.lower().find('test') != -1:
-        intent_list.add('code2ut')
-
-    if queryStr.lower().find('complete') != -1:
-        intent_list.add('complete_code')
-
-    if queryStr.lower().find('api') != -1:
-        intent_list.add('get_api_request_code')
-    if queryStr.lower().find('request') != -1:
-        intent_list.add('get_api_request_code')
-
+    intent_list = get_task_from_query(queryStr)
     if len(intent_list) == 0:
         return {'status': 'ok', 'output': ['magic']}
     return {'status': 'ok', 'output': list(intent_list)}

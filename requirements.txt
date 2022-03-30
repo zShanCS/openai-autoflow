@@ -4,8 +4,6 @@ fastapi
 uvicorn[standard]
 sentence-transformers
 torch
-torch>=1.10
-sentence-transformers>=2.2
 sentencepiece==0.1.91
 transformers==3.4.0
 whatthepatch==1.0.2

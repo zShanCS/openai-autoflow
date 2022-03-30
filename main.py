@@ -114,3 +114,24 @@ from templates import (code2nl, fix_bugs, get_api_request_code,
 #     for i in range(2, num):"""        
 # cc=complete_code(code,'check is numbers is prime')
 # print(cc)
+
+from nl2codes import create_embeddings, search_for_code, search_tokenizer
+'''
+Create an input json file first with following format:
+[
+  {
+    "fp": filepath,
+    "content": file content,
+  },
+]
+'''
+input_json = json.load("json_file.json")
+# when vs code just sends the input_json file just use
+create_embeddings(input_json, search_tokenizer.model_max_length)
+# this recreates the embeddings
+
+# for user queries
+
+# if calling it for the first time without calling create_embeddings beforehand
+# search_for_code("user query", input_json=input_json)
+# on subsequent user queries, use search_for_code("user query")

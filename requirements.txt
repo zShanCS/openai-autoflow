@@ -2,7 +2,6 @@ openai==0.15.0
 python-dotenv==0.19.2
 fastapi
 uvicorn[standard]
-sentence-transformers
 torch
 sentence-transformers
 sentencepiece

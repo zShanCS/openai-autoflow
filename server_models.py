@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
 class Prompt(BaseModel):
@@ -23,3 +23,11 @@ class QueryInfo(BaseModel):
     task:str
     tableName:str
     columnName:str
+
+class JsonData(BaseModel):
+    fp:str
+    content:str
+
+class SearchCode(BaseModel):
+    prompt:str
+    code: List[JsonData]

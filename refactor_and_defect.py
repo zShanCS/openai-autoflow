@@ -8,10 +8,9 @@ device = torch.device(
     'cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-base')
-defect_det = T5ForConditionalGeneration.from_pretrained(
-    'models/defect').to(device)
-refiner = T5ForConditionalGeneration.from_pretrained(
-    'models/refine').to(device)
+
+defect_det = T5ForConditionalGeneration.from_pretrained('models/defect').to(device)
+refiner = T5ForConditionalGeneration.from_pretrained('models/refine').to(device)
 
 
 def refine(code):

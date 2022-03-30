@@ -109,6 +109,7 @@ async def search_code(data: SearchCode):
     return {'status': 'ok', 'output': search_for_code(data.prompt, input_json=data.code)}
 
 
+
 @app.post('/magic')
 async def Api_Request(data: Prompt):
     print(data)

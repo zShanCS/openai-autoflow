@@ -274,7 +274,7 @@ def get_error_explanation_template(function):
 def get_error_explanation(function):
     prompt = get_error_explanation_template(function)
     code = iteratively_request_code(prompt, temperature=0.2, stop=['#', '"""', '//', '/*'],
-                    max_tokens=256, frequency_penalty=1, best_of=5)
+                                    max_tokens=256, frequency_penalty=1, best_of=5)
     return code
 
 
@@ -336,11 +336,11 @@ def fix_bugs(function, language):
     fn_header = template[1]
     temperature = 0
     code = iteratively_request_code(prompt, max_tokens=512, frequency_penalty=0.4,
-                    temperature=temperature, stop=stop, best_of=3)
+                                    temperature=temperature, stop=stop, best_of=3)
     while code.strip() == '':
         temperature += 0.1
         code = iteratively_request_code(prompt, max_tokens=512, frequency_penalty=0.4,
-                        temperature=temperature, stop=stop, best_of=3)
+                                        temperature=temperature, stop=stop, best_of=3)
     fixed_code = fn_header + "\n" + code
     return fixed_code
 
@@ -386,7 +386,7 @@ def get_code2docstring_template(code):
 def code2docstring(code):
     prompt = get_code2docstring_template(code)
     code = iteratively_request_code(prompt, temperature=0.2, max_tokens=256,
-                    frequency_penalty=0.5, stop=['"""', '/*'])
+                                    frequency_penalty=0.5, stop=['"""', '/*'])
     return code
 
 
@@ -454,7 +454,7 @@ def get_oneliner_template(function_code, language):
 def get_oneliner(function_code, language):
     prompt = get_oneliner_template(function_code, language)
     code = iteratively_request_code(prompt, temperature=0.2, max_tokens=150,
-                    frequency_penalty=0.5, stop=['"""', '\n'])
+                                    frequency_penalty=0.5, stop=['"""', '\n'])
     return code
 
 
@@ -499,12 +499,12 @@ def code2ut(function, language):
     prompt += get_unit_tests_template(function, language)
     temperature = 0
     code = iteratively_request_code(prompt, max_tokens=256, frequency_penalty=0.1, presence_penalty=0.1,
-                    temperature=temperature, stop=['#', '//', '/*'], best_of=3)
+                                    temperature=temperature, stop=['#', '//', '/*'], best_of=3)
     while code.strip() == '':
         temperature += .1
         code = iteratively_request_code(prompt, max_tokens=256, frequency_penalty=0.1,
-                        presence_penalty=0.1, temperature=temperature,
-                        stop=['#', '"""', '//', '/*'], best_of=3)
+                                        presence_penalty=0.1, temperature=temperature,
+                                        stop=['#', '"""', '//', '/*'], best_of=3)
     return code
 
 
@@ -551,30 +551,9 @@ def complete_code(code, task=''):
     prompt = get_code_completion_template(code, task)
     if task == '':
         print("WARNING: Task not provided. Resulting code may not be accurate")
-        temperature = 0.8
+        temperature = 0.6
     else:
         temperature = 0.2
     code = iteratively_request_code(prompt, temperature=temperature, max_tokens=256, frequency_penalty=0.8,
-                    presence_penalty=0.4, stop=['\n\n\n', '"""'])
+                                    presence_penalty=0.4, stop=['\n\n\n', '"""'])
     return code
-
-
-def send_code_request(task, **kwargs):
-    tasks = {
-        'api': get_api_request_code,
-        'sql2nl': sql2nl,
-        'nl2sql': nl2sql,
-        'code2nl': code2nl,
-        'error_explain': get_error_explanation,
-        'fixbugs': fix_bugs,
-        'code2doc': code2docstring,
-        'oneliner': get_oneliner,
-        'ut': code2ut,
-        'complete': complete_code,
-    }
-    if task in tasks:
-        return tasks[task](**kwargs)
-    else:
-        print('WARNING: Task does not exist! Using prompt as input to Codex')
-        return get_code(task, temperature=0.6, frequency_penalty=0.8, presence_penalty=0.4,
-                        max_tokens=512, stop=['\n\n\n'])

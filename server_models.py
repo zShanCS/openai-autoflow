@@ -31,3 +31,4 @@ class JsonData(BaseModel):
 class SearchCode(BaseModel):
     prompt:str
     code: List[JsonData]
+    recreate:bool

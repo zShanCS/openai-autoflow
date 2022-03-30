@@ -22,8 +22,8 @@ def create_embeddings(input_json, seq_length):
     segments = {}
     # First, take as input a json of programs and file paths
     for program in input_json:
-        fp = program['fp']
-        content = program['content']
+        fp = program.fp
+        content = program.content
         # Tokenize the content of each program
         tokens = search_tokenizer.encode(content)
         # initial 256 tokens

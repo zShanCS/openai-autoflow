@@ -99,4 +99,8 @@ async def get_intent(query: IntentAnalysis):
     intent_list = get_task_from_query(queryStr)
     if len(intent_list) == 0:
         return {'status': 'ok', 'output': ['magic']}
-    return {'status': 'ok', 'output': list(intent_list)}
+    return {'status': 'ok', 'output': intent_list}
+
+  
+  if __name__ == "__main__":
+    uvicorn.run("example:app", host="0.0.0.0", port=80, log_level="info")

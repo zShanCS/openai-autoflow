@@ -24,6 +24,10 @@ def create_embeddings(input_json, seq_length):
     for program in input_json:
         fp = program['fp']
         content = program['content']
+        # remove extra new lines
+        content = re.sub("\n+", "\n", content)
+        # remove comments
+        content = re.sub("#.*", "", content)
         # Tokenize the content of each program
         tokens = search_tokenizer.encode(content)
         # initial 256 tokens

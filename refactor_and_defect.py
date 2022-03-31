@@ -8,17 +8,16 @@ device = torch.device(
     'cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-base')
-defect_det = T5ForConditionalGeneration.from_pretrained(
-    'models/defect').to(device)
-refiner = T5ForConditionalGeneration.from_pretrained(
-    'models/refine').to(device)
+
+defect_det = T5ForConditionalGeneration.from_pretrained('models/defect').to(device)
+refiner = T5ForConditionalGeneration.from_pretrained('models/refine').to(device)
 
 
 def refine(code):
     input_ids = tokenizer(code, return_tensors="pt").input_ids.to(device)
     # simply generate a single sequence
     generated_ids = refiner.generate(input_ids,
-                                     max_length=int(input_ids.shape[1] * 1.1))
+                                     max_length=int(input_ids.shape[1] * 1.5))
     out = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
     return out
 

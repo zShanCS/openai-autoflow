@@ -18,16 +18,16 @@ search_model = RobertaModel.from_pretrained(model_path).to(device)
 
 
 def create_embeddings(input_json, seq_length):
+    print('its working........................')
     '''Create code embeddings for user code base'''
     segments = {}
     # First, take as input a json of programs and file paths
     for program in input_json:
-        fp = program['fp']
-        content = program['content']
+        fp = program.fp
+        content = program.content
         # remove extra new lines
         content = re.sub("\n+", "\n", content)
         # remove comments
-        content = re.sub("#.*", "", content)
         # Tokenize the content of each program
         tokens = search_tokenizer.encode(content)
         # initial 256 tokens
@@ -97,22 +97,25 @@ def remove_special_tokens(string):
 def get_code_from_hits(hits):
     '''Get the corresponding code from the most similar hit(s)'''
     global search_tokenizer
-    # just get the first one
-    hit = hits[0]
-    # the index inside the corpus
-    code_segment_index = hit['corpus_id']
-    # get the list of all code segments
-    with open("all_code_segments.pkl", "rb") as f:
-        all_code_segments = pickle.load(f)
-    # the tokens list for this code segment
-    code_segment_tokens = all_code_segments[code_segment_index]
-    # free memory
-    del all_code_segments
-    # the original code segment
-    code_segment = search_tokenizer.decode(code_segment_tokens)
-    # remove special tokens
-    code_segment = remove_special_tokens(code_segment)
-    return code_segment
+    if len(hits) > 0:
+        # just get the first one
+        hit = hits[0]
+        # the index inside the corpus
+        code_segment_index = hit['corpus_id']
+        # get the list of all code segments
+        with open("all_code_segments.pkl", "rb") as f:
+            all_code_segments = pickle.load(f)
+        # the tokens list for this code segment
+        code_segment_tokens = all_code_segments[code_segment_index]
+        # free memory
+        del all_code_segments
+        # the original code segment
+        code_segment = search_tokenizer.decode(code_segment_tokens)
+        # remove special tokens
+        code_segment = remove_special_tokens(code_segment)
+        return code_segment
+    else:
+        return ''
 
 
 def search_for_code(query, top_k=1, threshold=0.4, recreate=False, input_json=None):

@@ -10,7 +10,7 @@ from server_models import (API_Req, Code_Task, IntentAnalysis, Prompt,
 from templates import (code2docstring, code2nl, code2ut, complete_code,
                        fix_bugs, get_api_request_code, get_error_explanation,
                        get_oneliner, nl2sql, sql2nl)
-
+from commit_bert import functions
 '''
     code2nl, ☑️
     fix_bugs, ☑️
@@ -92,9 +92,14 @@ async def Api_Request(data: API_Req):
 
 
 @app.post('/refine')
-async def Api_Request(data: Prompt):
+async def Refine(data: Prompt):
     print(data)
     return {'status': 'ok', 'output': refine(data.prompt)}
+
+@app.post('/commit-message')
+async def commit_message(data: Prompt):
+    print(data)
+    return {'status': 'ok', 'output': functions.predict_message(data.prompt)}
 
 
 @app.post('/detect-defect')
@@ -103,17 +108,18 @@ async def Api_Request(data: Prompt):
     return {'status': 'ok', 'output': detect_defect(data.prompt)}
 
 
-@app.post('search-code')
+@app.post('/search-code')
 async def search_code(data: SearchCode):
     print(data.code)
-    return {'status': 'ok', 'output': search_for_code(data.prompt, input_json=data.code)}
+    return {'status': 'ok', 'output': search_for_code(data.prompt, input_json=data.code, recreate=data.recreate)}
+
 
 
 @app.post('/magic')
 async def Api_Request(data: Prompt):
     print(data)
     return {'status': 'ok',
-            'output': iteratively_request_code(prompt=data.prompt,
+            'output': iteratively_request_code(prompt=f'"""{data.prompt}"""',
                                                temperature=0.6,
                                                frequency_penalty=0.5,
                                                presence_penalty=0.5,
@@ -133,4 +139,4 @@ async def get_intent(query: IntentAnalysis):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=80, log_level="info")
+    uvicorn.run("main:app", host="127.0.0.1", port=8080)

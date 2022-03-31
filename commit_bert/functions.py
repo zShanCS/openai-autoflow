@@ -8,9 +8,9 @@ from transformers import (RobertaConfig, RobertaTokenizer)
 import easydict 
 import whatthepatch
 
-from commit.model import Seq2Seq
-from commit.utils import (Example, convert_examples_to_features)
-from commit.model.diff_roberta import RobertaModel
+from commit_bert.commit.model import Seq2Seq
+from commit_bert.commit.utils import (Example, convert_examples_to_features)
+from commit_bert.commit.model.diff_roberta import RobertaModel
 
 
 MODEL_CLASSES = {'roberta': (RobertaConfig, RobertaModel, RobertaTokenizer)}

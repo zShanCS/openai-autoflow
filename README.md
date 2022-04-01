@@ -15,4 +15,5 @@ Ensure you have `python 3.8` installed.
 	- Rename the defect and refine models as `pytorch_model.bin`
 5. Download the [CommitBERT weights](https://drive.google.com/drive/folders/153brGoeSqpCyYSZi2OMmEs25crcsi4WU) folder, place it in `./commit_bert`, and rename it as `weight`
 ## Start Server
-	uvicorn server:app --reload --port 8080
+	in root folder:
+           `python main.py`

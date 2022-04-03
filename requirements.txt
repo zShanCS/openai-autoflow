@@ -3,8 +3,13 @@ python-dotenv==0.19.2
 fastapi
 uvicorn[standard]
 torch
+<<<<<<< HEAD
 sentence-transformers
 sentencepiece
 transformers
 whatthepatch
 easydict
+=======
+torch>=1.10
+sentence-transformers>=2.2
+>>>>>>> parent of a75a3fe (Added model for commit message autosuggestion)
